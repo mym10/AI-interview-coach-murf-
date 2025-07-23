@@ -1,6 +1,7 @@
 // src/electron/main.js
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+// import('./server.js');
 
 function createWindow() {
   const win = new BrowserWindow({
