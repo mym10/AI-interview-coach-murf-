@@ -5,6 +5,7 @@ import { getFollowUpQuestion, evaluateAnswer } from '../utils/mistral';
 import { speakWithMurf } from '../utils/murf';
 
 
+
 const Interview = () => {
   const location = useLocation();
   const { parsedText, role } = location.state || {};
@@ -21,7 +22,7 @@ const Interview = () => {
   useEffect(() => {
     setCurrentQuestion(firstQuestion);
     setChat([{ from: 'ai', text: firstQuestion }]);
-    // speakWithMurf(firstQuestion);
+    speakWithMurf(firstQuestion);
   }, []);
 
   const handleSend = async () => {
@@ -44,11 +45,11 @@ const Interview = () => {
       const finalMsg = 'Great! That wraps up our interview. Here’s your feedback:';
       setCurrentQuestion('');
       setChat([...newChat, { from: 'ai', text: finalMsg }]);
-    //   speakWithMurf(finalMsg);
+      speakWithMurf(finalMsg);
     } else {
       setCurrentQuestion(nextQ);
       setChat([...newChat, { from: 'ai', text: nextQ }]);
-    //   speakWithMurf(nextQ);
+      speakWithMurf(nextQ);
     }
   };
 

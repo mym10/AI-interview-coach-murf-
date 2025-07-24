@@ -1,5 +1,5 @@
 const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
-const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || 'your_mistral_api_key_here';
+const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || 's5lMj9IvHcrcesjBXageU7hOHOzS4ftK';
 
 // A helper to call Mistral
 async function callMistral(messages) {

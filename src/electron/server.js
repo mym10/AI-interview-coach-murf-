@@ -1,44 +1,42 @@
-// server.js
 import express from 'express';
-import fetch from 'node-fetch';
 import cors from 'cors';
-
 import dotenv from 'dotenv';
+import axios from 'axios';
+
 dotenv.config();
 
-const MURF_API_KEY = process.env.VITE_MURF_API_KEY;
+const MURF_API_KEY = process.env.MURF_API_KEY || 'ap2_5bb7fd4f-f5d6-451b-8adf-851403991026';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.post('/api/murf/speak', async (req, res) => {
-  console.log('Received request:', req.body);
+  const { text } = req.body;
+
   try {
-    const { text, voice_id = "en-US-natalie", style = "Promo" } = req.body;
+    const response = await axios.post(
+      'https://api.murf.ai/v1/speech/generate',
+      {
+        text,
+        voiceId: 'en-US-natalie' // You can replace this with another supported voice ID
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'api-key': MURF_API_KEY
+        }
+      }
+    );
 
-    const response = await fetch('https://api.murf.ai/v1/speech/generate', {
-      method: 'POST',
-      headers: {
-        'api-key': MURF_API_KEY, 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    body: JSON.stringify({ text, voiceId: voice_id, style })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      return res.status(response.status).send(errorData);
-    }
-
-    const data = await response.json();
-    res.json(data);
+    const audioFile = response.data.audioFile;
+    res.json({ audioFile });
   } catch (err) {
-    console.error('Server Error:', err);
-    res.status(500).send('Server error');
+    console.error('Error calling Murf API:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to generate voice' });
   }
 });
 
 const PORT = 5000;
-app.listen(PORT, () => console.log(`Proxy server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
