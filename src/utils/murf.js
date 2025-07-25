@@ -8,8 +8,8 @@ export const speakWithMurf = async (text) => {
       },
       body: JSON.stringify({ 
         text,
-        voice_id: "en-US-natalie",  // ✅ required by Murf
-        style: "Promo"              // ✅ required by Murf
+        voice_id: "en-US-natalie",  
+        style: "Promo"              
       })
     });
 

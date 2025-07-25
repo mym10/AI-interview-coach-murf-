@@ -5,7 +5,7 @@ import axios from 'axios';
 
 dotenv.config();
 
-const MURF_API_KEY = process.env.MURF_API_KEY || 'ap2_5bb7fd4f-f5d6-451b-8adf-851403991026';
+const MURF_API_KEY = process.env.VITE_MURF_API_KEY;
 
 const app = express();
 app.use(cors());

@@ -54,37 +54,56 @@ const Interview = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Interview for: {role}</h2>
-      <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #ccc', padding: '1rem' }}>
-        {chat.map((entry, idx) => (
-          <p key={idx} style={{ color: entry.from === 'ai' ? 'white' : 'green' }}>
-            <strong>{entry.from === 'ai' ? 'AI: ' : 'You: '}</strong>{entry.text}
-          </p>
-        ))}
+    <div className="min-h-screen w-full bg-[#0e0e10] text-[#f4f4f5] px-6 py-12 flex items-center justify-center">
+      <div className="w-full max-w-3xl space-y-6">
+
+        {/* Header */}
+        <h2 className="text-2xl font-semibold">
+          Interview for: <span className="text-[#fbbf24]">{role}</span>
+        </h2>
+
+        {/* Chat Window */}
+        <div className="bg-[#1c1e26] border border-[#2e2e32] rounded-lg p-4 max-h-[300px] overflow-y-auto space-y-3">
+          {chat.map((entry, idx) => (
+            <p key={idx} className={`text-sm leading-relaxed ${entry.from === 'ai' ? 'text-white' : 'text-[#22c55e]'}`}>
+              <strong>{entry.from === 'ai' ? 'AI: ' : 'You: '}</strong> {entry.text}
+            </p>
+          ))}
+        </div>
+
+        {/* Answer Input */}
+        {!interviewOver && (
+          <div className="space-y-3">
+            <textarea
+              rows={3}
+              placeholder="Type your answer..."
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              className="w-full bg-[#1c1e26] text-[#f4f4f5] border border-[#2e2e32] rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
+            />
+            <button
+              onClick={handleSend}
+              className="bg-[#f59e0b] hover:bg-[#d97706] text-black px-6 py-2 rounded-md font-medium transition-all"
+            >
+              Send
+            </button>
+          </div>
+        )}
+
+        {/* Feedback Summary */}
+        {interviewOver && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">Feedback Summary</h3>
+            <ul className="list-disc list-inside space-y-2 text-[#a1a1aa]">
+              {score.map((s, i) => (
+                <li key={i}>
+                  <strong className="text-white">{s.question}</strong>: {s.feedback}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
-      {!interviewOver && (
-        <div style={{ marginTop: '1rem' }}>
-          <textarea
-            rows={3}
-            placeholder="Type your answer..."
-            value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
-            style={{ width: '100%' }}
-          />
-          <button onClick={handleSend} style={{ marginTop: '0.5rem' }}>Send</button>
-        </div>
-      )}
-      {interviewOver && (
-        <div>
-          <h3>Feedback Summary</h3>
-          <ul>
-            {score.map((s, i) => (
-              <li key={i}><strong>{s.question}</strong>: {s.feedback}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };
