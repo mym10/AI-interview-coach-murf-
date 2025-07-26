@@ -1,5 +1,6 @@
 // pages/Interview.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
 import { useLocation } from 'react-router-dom';
 import { getFollowUpQuestion, evaluateAnswer } from '../utils/mistral';
 import { speakWithMurf } from '../utils/murf';
@@ -9,6 +10,9 @@ import { speakWithMurf } from '../utils/murf';
 const Interview = () => {
   const location = useLocation();
   const { parsedText, role } = location.state || {};
+  const recognitionRef = useRef(null);
+  const [listening, setListening] = useState(false);
+
 
   const [chat, setChat] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -24,6 +28,40 @@ const Interview = () => {
     setChat([{ from: 'ai', text: firstQuestion }]);
     speakWithMurf(firstQuestion);
   }, []);
+  useEffect(() => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    console.warn('Speech recognition not supported in this browser');
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognitionRef.current = recognition;
+  recognition.lang = 'en-US';
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  recognition.onresult = (event) => {
+    const spokenText = event.results[0][0].transcript;
+    console.log('🎤 User said:', spokenText);
+    setUserAnswer(spokenText);
+    setListening(false);
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    setListening(false);
+  };
+
+  if (listening) {
+    recognition.start();
+  }
+
+  return () => {
+    recognition.stop();
+  };
+}, [listening]);
+
 
   const handleSend = async () => {
     if (!userAnswer.trim()) return;
@@ -73,14 +111,13 @@ const Interview = () => {
 
         {/* Answer Input */}
         {!interviewOver && (
-          <div className="space-y-3">
-            <textarea
-              rows={3}
-              placeholder="Type your answer..."
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              className="w-full bg-[#1c1e26] text-[#f4f4f5] border border-[#2e2e32] rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
-            />
+          <div className="flex gap-4">
+            <button
+    onClick={() => setListening(true)}
+    className={`bg-[#22c55e] hover:bg-[#16a34a] text-black px-6 py-2 rounded-md font-medium transition-all ${listening ? 'animate-pulse' : ''}`}
+            >
+         🎙️ Speak
+            </button>
             <button
               onClick={handleSend}
               className="bg-[#f59e0b] hover:bg-[#d97706] text-black px-6 py-2 rounded-md font-medium transition-all"
