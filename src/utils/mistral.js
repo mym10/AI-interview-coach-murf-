@@ -21,10 +21,7 @@ async function callMistral(messages) {
 }
 
 // Get follow-up question
-export async function getFollowUpQuestion(chatHistory, resumeText, role, aiQuestionCount) {
-
-  if (aiQuestionCount >= 3) return 'end'; 
-
+export async function getFollowUpQuestion(chatHistory, resumeText, role) {
   const chatMessages = [
     {
       role: 'system',

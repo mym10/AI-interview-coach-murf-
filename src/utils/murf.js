@@ -11,21 +11,31 @@ export const speakWithMurf = async (text) => {
 
     const data = await response.json();
 
-    const audioUrl = data.audioFile; // 🧠 This is the correct field
+    const audioUrl = data.audioFile;
 
     if (!audioUrl) {
       console.error("No audio file returned:", data);
       return;
     }
 
-    const audio = new Audio(audioUrl);
-    audio.onerror = (e) => console.error("Audio playback error", e);
+    return new Promise((resolve, reject) => {
+      const audio = new Audio(audioUrl);
+      audio.onerror = (e) => {
+        console.error("Audio playback error", e);
+        reject(new Error("Audio playback failed"));
+      };
 
-    await audio.play();
-    return new Promise((resolve) => {
-      audio.onended = resolve;
+      audio.onended = () => {
+        resolve();
+      };
+
+      audio.play().catch((err) => {
+        console.error("Audio play error:", err);
+        reject(err);
+      });
     });
   } catch (err) {
     console.error("Error calling Murf API:", err);
+    throw err;
   }
 };
