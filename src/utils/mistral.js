@@ -21,7 +21,10 @@ async function callMistral(messages) {
 }
 
 // Get follow-up question
-export async function getFollowUpQuestion(chatHistory, resumeText, role) {
+export async function getFollowUpQuestion(chatHistory, resumeText, role, aiQuestionCount) {
+
+  if (aiQuestionCount >= 3) return 'end'; 
+
   const chatMessages = [
     {
       role: 'system',
@@ -38,10 +41,6 @@ export async function getFollowUpQuestion(chatHistory, resumeText, role) {
   ];
 
   const result = await callMistral(chatMessages);
-
-  // Optional: you can decide when to end the interview
-  if (chatHistory.length > 5) return 'end';
-
   return result.trim();
 }
 

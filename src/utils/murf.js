@@ -1,28 +1,31 @@
 export const speakWithMurf = async (text) => {
-  console.log('[MURF] Speaking:', text); 
   try {
-    const res = await fetch('http://localhost:5000/api/murf/speak', {
-      method: 'POST',
+    const response = await fetch("http://localhost:5000/api/murf/speak", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
+        "api-key": import.meta.env.VITE_MURF_API_KEY,
       },
-      body: JSON.stringify({ 
-        text,
-        voice_id: "en-US-natalie",  
-        style: "Promo"              
-      })
+      body: JSON.stringify({ text }),
     });
 
-    const data = await res.json();
+    const data = await response.json();
 
-    if (!data.audioFile) {
-      console.error('No audio file returned:', data);
+    const audioUrl = data.audioFile; // 🧠 This is the correct field
+
+    if (!audioUrl) {
+      console.error("No audio file returned:", data);
       return;
     }
 
-    const audio = new Audio(data.audioFile);
-    audio.play();
+    const audio = new Audio(audioUrl);
+    audio.onerror = (e) => console.error("Audio playback error", e);
+
+    await audio.play();
+    return new Promise((resolve) => {
+      audio.onended = resolve;
+    });
   } catch (err) {
-    console.error('Murf TTS Error:', err);
+    console.error("Error calling Murf API:", err);
   }
 };

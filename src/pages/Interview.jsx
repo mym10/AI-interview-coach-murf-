@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getFollowUpQuestion, evaluateAnswer } from '../utils/mistral';
 import { speakWithMurf } from '../utils/murf';
-
-
+import { startListening } from '../utils/speech';
+const MAX_QUESTIONS = 4;
 
 const Interview = () => {
   const location = useLocation();
@@ -15,41 +15,73 @@ const Interview = () => {
   const [userAnswer, setUserAnswer] = useState('');
   const [interviewOver, setInterviewOver] = useState(false);
   const [score, setScore] = useState([]);
+  const [status, setStatus] = useState('');
+  const [aiQuestionCount, setAiQuestionCount] = useState(1);
 
-  // Predefined first question
   const firstQuestion = "Let's begin. Can you tell me about yourself?";
 
   useEffect(() => {
-    setCurrentQuestion(firstQuestion);
-    setChat([{ from: 'ai', text: firstQuestion }]);
-    speakWithMurf(firstQuestion);
+    const runInitialStep = async () => {
+      setCurrentQuestion(firstQuestion);
+      setChat([{ from: 'ai', text: firstQuestion }]);
+      await speakWithMurf(firstQuestion);
+      setStatus('Listening...');
+      const transcript = await startListening();
+      setStatus('');
+      setUserAnswer(transcript);
+      await handleSend(transcript); // starts once
+    };
+
+    runInitialStep();
   }, []);
 
-  const handleSend = async () => {
-    if (!userAnswer.trim()) return;
+  const handleSend = async (answer) => {
+    const finalAnswer = answer || userAnswer;
+    if (!finalAnswer.trim()) return;
 
-    // Save user response
-    const newChat = [...chat, { from: 'user', text: userAnswer }];
-    setChat(newChat);
+    setChat(prev => [...prev, { from: 'user', text: finalAnswer }]);
     setUserAnswer('');
 
-    // Evaluate this answer (optional)
-    const feedback = await evaluateAnswer(currentQuestion, userAnswer, role);
+    const feedback = await evaluateAnswer(currentQuestion, finalAnswer, role);
     setScore(prev => [...prev, { question: currentQuestion, feedback }]);
 
-    // Get next question
-    const nextQ = await getFollowUpQuestion(newChat, parsedText, role);
+    const newCount = aiQuestionCount + 1;
+    setAiQuestionCount(newCount);
+
+    if (newCount >= MAX_QUESTIONS) {
+      const finalMsg = 'Great! That wraps up our interview. Here’s your feedback:';
+      setInterviewOver(true);
+      setCurrentQuestion('');
+      setChat(prev => [...prev, { from: 'ai', text: finalMsg }]);
+      await speakWithMurf(finalMsg);
+      return;
+    }
+
+    const nextQ = await getFollowUpQuestion(chat, parsedText, role, newCount);
 
     if (nextQ === 'end') {
-      setInterviewOver(true);
       const finalMsg = 'Great! That wraps up our interview. Here’s your feedback:';
+      setInterviewOver(true);
       setCurrentQuestion('');
-      setChat([...newChat, { from: 'ai', text: finalMsg }]);
-      speakWithMurf(finalMsg);
-    } else {
-      setCurrentQuestion(nextQ);
-      setChat([...newChat, { from: 'ai', text: nextQ }]);
-      speakWithMurf(nextQ);
+      setChat(prev => [...prev, { from: 'ai', text: finalMsg }]);
+      await speakWithMurf(finalMsg);
+      return;
+    }
+
+    setCurrentQuestion(nextQ);
+    setChat(prev => [...prev, { from: 'ai', text: nextQ }]);
+
+    setStatus('Speaking...');
+    await speakWithMurf(nextQ);
+
+    setStatus('Listening...');
+    const transcript = await startListening();
+    setStatus('');
+    setUserAnswer(transcript);
+
+    // Safe check before sending next
+    if (newCount <= MAX_QUESTIONS) {
+      await handleSend(transcript);
     }
   };
 
@@ -61,6 +93,9 @@ const Interview = () => {
         <h2 className="text-2xl font-semibold">
           Interview for: <span className="text-[#fbbf24]">{role}</span>
         </h2>
+
+        {/* staus */}
+        {status && <p className="text-sm italic text-gray-500 mt-2">{status}</p>}
 
         {/* Chat Window */}
         <div className="bg-[#1c1e26] border border-[#2e2e32] rounded-lg p-4 max-h-[300px] overflow-y-auto space-y-3">
@@ -75,6 +110,7 @@ const Interview = () => {
         {!interviewOver && (
           <div className="space-y-3">
             <textarea
+              disabled
               rows={3}
               placeholder="Type your answer..."
               value={userAnswer}
@@ -82,10 +118,10 @@ const Interview = () => {
               className="w-full bg-[#1c1e26] text-[#f4f4f5] border border-[#2e2e32] rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
             />
             <button
-              onClick={handleSend}
+              disabled
               className="bg-[#f59e0b] hover:bg-[#d97706] text-black px-6 py-2 rounded-md font-medium transition-all"
             >
-              Send
+             Listening...
             </button>
           </div>
         )}
