@@ -16,8 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const distPath = path.resolve(__dirname, '../../dist');
 // Serve frontend
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(distPath));
 
 app.post('/api/murf/speak', async (req, res) => {
   const { text } = req.body;
@@ -47,8 +48,8 @@ app.post('/api/murf/speak', async (req, res) => {
 });
 
 // Catch-all for SPA routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 5000;
