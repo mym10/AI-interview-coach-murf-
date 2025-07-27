@@ -9,22 +9,44 @@ export const startListening = () => {
 
       const recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
+      recognition.interimResults = true;
+      recognition.continuous = true; // Allow extended listening
 
-      recognition.onstart = () => console.log("🎤 Listening started...");
-      recognition.onaudiostart = () => console.log("🔊 Audio capture started");
-      recognition.onspeechstart = () => console.log("🗣️ Speech has been detected");
-      recognition.onspeechend = () => console.log("🚫 Speech ended");
+      let finalTranscript = '';
+      let silenceTimer;
+      const SILENCE_THRESHOLD = 4000; // 4 sec of silence = done
+
+      recognition.onstart = () => console.log("Listening started...");
+      recognition.onaudiostart = () => console.log("Audio capture started");
+      recognition.onspeechstart = () => console.log("Speech detected");
 
       recognition.onresult = (event) => {
-        console.log("✅ Transcript result:", event);
-        const transcript = event.results[0][0].transcript;
-        resolve(transcript);
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        console.log("User speaking:", finalTranscript + interimTranscript);
+
+        // Reset timer — user is still talking
+        clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (finalTranscript.trim()) {
+            console.log("User finished:", finalTranscript.trim());
+            recognition.stop(); 
+            resolve(finalTranscript.trim());
+          }
+        }, SILENCE_THRESHOLD);
       };
 
       recognition.onerror = (event) => {
-        console.error("❌ Recognition error:", event.error);
+        console.error("Recognition error:", event.error);
         reject(`SpeechRecognition error: ${event.error}`);
       };
 
@@ -32,7 +54,7 @@ export const startListening = () => {
 
       recognition.start();
     } catch (err) {
-      console.error("🔥 startListening exception:", err);
+      console.error("startListening exception:", err);
       reject(err);
     }
   });
