@@ -5,7 +5,7 @@ import { getFollowUpQuestion, evaluateAnswer } from '../utils/mistral';
 import { speakWithMurf } from '../utils/murf';
 import { startListening } from '../utils/speech';
 
-const MAX_QUESTIONS = 4;
+const MAX_QUESTIONS = 2;
 
 const Interview = () => {
   const location = useLocation();
@@ -44,6 +44,7 @@ const Interview = () => {
     runInitialStep();
   }, []);
 
+  // const updatedChat = [...chat, { from: 'user', text: queuedAnswer }];
   const chatRef = useRef(chat);
   useEffect(() => {
     chatRef.current = chat;
