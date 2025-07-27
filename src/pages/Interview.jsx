@@ -28,7 +28,7 @@ const Interview = () => {
     setChat([{ from: 'ai', text: firstQuestion }]);
     speakWithMurf(firstQuestion);
   }, []);
-  useEffect(() => {
+ useEffect(() => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     console.warn('Speech recognition not supported in this browser');
@@ -37,15 +37,18 @@ const Interview = () => {
 
   const recognition = new SpeechRecognition();
   recognitionRef.current = recognition;
+
   recognition.lang = 'en-US';
   recognition.continuous = true;
   recognition.interimResults = false;
 
   recognition.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
+    const spokenText = Array.from(event.results)
+      .map(result => result[0].transcript)
+      .join(' ');
     console.log('🎤 User said:', spokenText);
     setUserAnswer(spokenText);
-    setListening(false);
+    setListening(false); // Optional: auto-stop after one input
   };
 
   recognition.onerror = (event) => {
@@ -55,6 +58,10 @@ const Interview = () => {
 
   if (listening) {
     recognition.start();
+    console.log('🎙️ Listening started...');
+  } else {
+    recognition.stop();
+    console.log('🛑 Listening stopped.');
   }
 
   return () => {
@@ -63,7 +70,13 @@ const Interview = () => {
 }, [listening]);
 
 
+
   const handleSend = async () => {
+    if (listening) {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }
+
     if (!userAnswer.trim()) return;
 
     // Save user response
@@ -113,11 +126,14 @@ const Interview = () => {
         {!interviewOver && (
           <div className="flex gap-4">
             <button
-    onClick={() => setListening(true)}
-    className={`bg-[#22c55e] hover:bg-[#16a34a] text-black px-6 py-2 rounded-md font-medium transition-all ${listening ? 'animate-pulse' : ''}`}
-            >
-         🎙️ Speak
-            </button>
+             onClick={() => {
+                  if (!listening) setListening(true);
+                 }}
+                   className={`bg-[#22c55e] hover:bg-[#16a34a] text-black px-6 py-2 rounded-md font-medium transition-all ${listening ? 'animate-pulse' : ''}`}
+                 >
+                  🎙️ Speak
+               </button>
+
             <button
               onClick={handleSend}
               className="bg-[#f59e0b] hover:bg-[#d97706] text-black px-6 py-2 rounded-md font-medium transition-all"
