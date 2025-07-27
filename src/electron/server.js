@@ -2,14 +2,22 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-const MURF_API_KEY = process.env.VITE_MURF_API_KEY;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const MURF_API_KEY = process.env.MURF_API_KEY;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'dist')));
 
 app.post('/api/murf/speak', async (req, res) => {
   const { text } = req.body;
@@ -19,7 +27,7 @@ app.post('/api/murf/speak', async (req, res) => {
       'https://api.murf.ai/v1/speech/generate',
       {
         text,
-        voiceId: 'en-US-natalie' // You can replace this with another supported voice ID
+        voiceId: 'en-US-natalie'
       },
       {
         headers: {
@@ -38,5 +46,10 @@ app.post('/api/murf/speak', async (req, res) => {
   }
 });
 
-const PORT = 5000;
+// Catch-all for SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
