@@ -10,7 +10,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MURF_API_KEY = process.env.MURF_API_KEY;
+const MURF_API_KEY = "ap2_fe3a3fbe-3128-4fae-be5c-475715de7968";
 
 const app = express();
 app.use(cors());
@@ -34,7 +34,7 @@ app.post('/api/murf/speak', async (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          'api-key': MURF_API_KEY
+          'api-key': "ap2_fe3a3fbe-3128-4fae-be5c-475715de7968"
         }
       }
     );

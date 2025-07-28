@@ -1,10 +1,9 @@
 export const speakWithMurf = async (text) => {
   try {
-    const response = await fetch("http://localhost:5000/api/murf/speak", {
+    const response = await fetch("/api/murf/speak", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": import.meta.env.VITE_MURF_API_KEY,
       },
       body: JSON.stringify({ text }),
     });
